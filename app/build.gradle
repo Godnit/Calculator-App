@@ -2,4 +2,6 @@ plugins { id 'com.android.application' }
 
 android { namespace 'com.example.hasibati'; compileSdk 34
  defaultConfig { applicationId 'com.example.hasibati'; minSdk 23; targetSdk 34; versionCode 1; versionName '1.0' }
+ signingConfigs { release { storeFile file("release.keystore"); storePassword "naffith-build"; keyAlias "naffith"; keyPassword "naffith-build" } }
+ buildTypes { release { signingConfig signingConfigs.release; minifyEnabled false } }
 }
