@@ -24,13 +24,11 @@ jobs:
         with:
           gradle-version: '8.2'
       - name: Create signing key
-        working-directory: calculator-android
         run: keytool -genkeypair -v -keystore release.keystore -storepass naffith-build -keypass naffith-build -alias naffith -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Naffith, OU=App, O=Naffith, L=Local, S=Local, C=YE"
       - name: Build release APK
-        working-directory: calculator-android
         run: gradle assembleRelease --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: naffith-release-apk
-          path: calculator-android/app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
