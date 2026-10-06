@@ -23,10 +23,9 @@ jobs:
         with:
           gradle-version: '8.2'
       - name: Build debug APK
-        working-directory: calculator-android
         run: gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: hasibati-debug-apk
-          path: calculator-android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
