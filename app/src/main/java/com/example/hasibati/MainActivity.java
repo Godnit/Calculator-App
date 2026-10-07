@@ -32,7 +32,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   if(a.contains("كروم")||a.contains("chrome")){openNamedPackage("com.android.chrome","Chrome");return;}
   if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
   if(a.contains("اعدادات")||a.contains("ضبط")){open(new Intent(Settings.ACTION_SETTINGS),"سأفتح الإعدادات");return;}
-  if(expr!=null&&!a.contains("افتح")){try{double n=eval(expr);say("الناتج هو "+(n==(long)n?String.valueOf((long)n):String.valueOf(n)));return;}catch(Exception e){}}
+  if(expr!=null){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
   if(a.startsWith("افتح ")||a.startsWith("شغل ")||a.startsWith("ادخل ")||a.startsWith("انتقل")){launchBestApp(a);return;}
   say("لم أفهم اسم التطبيق. اكتب: افتح ثم اسم التطبيق، أو استخدم الوضع المتقدم للبحث والكتابة داخله.");
  }
