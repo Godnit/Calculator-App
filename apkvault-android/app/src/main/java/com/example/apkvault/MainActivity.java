@@ -38,7 +38,8 @@ public class MainActivity extends Activity {
     private int accentColor(){return new int[]{0xff1565c0,0xff00897b,0xff6a1b9a,0xffef6c00}[Math.max(0,Math.min(3,accent))];}
     private TextView text(String s,int size){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(dark?Color.WHITE:0xff263238);t.setPadding(dp(10),dp(7),dp(10),dp(7));return t;}
     private GradientDrawable round(int c,int r){GradientDrawable d=new GradientDrawable();d.setColor(c);d.setCornerRadius(dp(r));return d;}
-    private void buildUi(){buildUi(true);}\n    private void buildUi(boolean refresh){
+    private void buildUi(){buildUi(true);}
+    private void buildUi(boolean refresh){
         settingsOpen=false; folderLabel=null;
         getWindow().setStatusBarColor(accentColor()); getWindow().setNavigationBarColor(dark?0xff121212:0xfff7f9fc);
         root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setPadding(dp(10),dp(8),dp(10),0);root.setBackgroundColor(dark?0xff121212:0xfff7f9fc);
