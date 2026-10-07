@@ -2,6 +2,7 @@ package com.example.apkvault;
 
 import android.app.*;
 import android.content.*;
+import android.database.Cursor;
 import android.content.pm.*;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
