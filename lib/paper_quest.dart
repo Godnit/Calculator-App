@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'paper_game_engine.dart';
 
 class PaperQuest extends StatefulWidget {
   const PaperQuest({super.key});
@@ -8,14 +9,19 @@ class PaperQuest extends StatefulWidget {
 }
 
 class _PaperQuestState extends State<PaperQuest> {
-  double x = 50;
-  double y = 220;
+  final PaperMap map = demoPaperMap;
+  late Offset player;
   int coins = 0;
 
-  void move(double dx, double dy) {
+  @override
+  void initState() {
+    super.initState();
+    player = map.start;
+  }
+
+  void move(double x, double y) {
     setState(() {
-      x += dx;
-      y += dy;
+      player = Offset(player.dx + x, player.dy + y);
     });
   }
 
@@ -29,16 +35,25 @@ class _PaperQuestState extends State<PaperQuest> {
             child: Stack(
               children: [
                 Container(color: Colors.white),
-                Positioned(left: 20, top: 80, child: Container(width: 220, height: 25, color: Colors.black)),
-                const Positioned(left: 280, top: 100, child: CircleAvatar(backgroundColor: Colors.blue)),
-                Positioned(left: x, top: y, child: const CircleAvatar(backgroundColor: Colors.green)),
+                ...map.ground.map((g) => Positioned(
+                  left: g.left,
+                  top: g.top,
+                  child: Container(width: g.width, height: g.height, color: Colors.black),
+                )),
                 Positioned(
-                  left: 180,
-                  top: 160,
-                  child: GestureDetector(
-                    onTap: () => setState(() => coins++),
-                    child: const CircleAvatar(backgroundColor: Colors.yellow),
-                  ),
+                  left: map.finish.dx,
+                  top: map.finish.dy,
+                  child: const CircleAvatar(backgroundColor: Colors.blue),
+                ),
+                ...map.coins.map((c) => Positioned(
+                  left: c.dx,
+                  top: c.dy,
+                  child: const CircleAvatar(backgroundColor: Colors.yellow),
+                )),
+                Positioned(
+                  left: player.dx,
+                  top: player.dy,
+                  child: const CircleAvatar(backgroundColor: Colors.green),
                 ),
               ],
             ),
