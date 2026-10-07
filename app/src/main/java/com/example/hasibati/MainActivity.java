@@ -28,8 +28,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   if(expr!=null&&(a.contains("حاسبه")||a.contains("احسب")||a.contains("عمليه"))){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
   if(a.contains("معرض")||a.contains("صور")||a.contains("استديو")){openGallery();return;}
   if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles(a);return;}
-  if(a.contains("mx player")||a.contains("ام اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
-  if(a.contains("كروم")||a.contains("chrome")){openNamedPackage("com.android.chrome","Chrome");return;}
+  if(a.contains("mx player")||a.contains("ام اكس")||a.contains("اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")||a.contains("media player")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
+  if(a.contains("كروم")||a.contains("كرووم")||a.contains("جوجل كروم")||a.contains("chrome")||a.contains("google chrome")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.android.chrome","Chrome");return;}
   if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
   if(a.contains("اعدادات")||a.contains("ضبط")){open(new Intent(Settings.ACTION_SETTINGS),"سأفتح الإعدادات");return;}
   if(expr!=null){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
@@ -51,7 +51,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   try{startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_FILES));say("سأفتح إدارة الملفات");}catch(Exception e){try{startActivity(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE));say("سأفتح مدير الملفات");}catch(Exception z){say("لم أجد تطبيق إدارة الملفات");}}}
  void openNamedPackage(String pkg,String name){Intent i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null){launchBestApp(norm(name));return;}open(i,"سأفتح "+name+(CommandAccessibilityService.pendingSearch.isEmpty()?"":" وأبحث عن "+CommandAccessibilityService.pendingSearch));}
  void launchBestApp(String q){
-  String wanted=q.replaceFirst("^(افتح|شغل|ادخل|انتقل)\\s*","").trim();String w=norm(wanted);ApplicationInfo best=null;int score=0;
+  String wanted=q.replaceFirst("^(افتح|شغل|ادخل|انتقل|اذهب الى|اذهب إلى)\\s*","").trim();wanted=wanted.replaceFirst("\\s+(وابحث|ثم ابحث|و اكتب|ثم اكتب).*","").trim();String w=norm(wanted);ApplicationInfo best=null;int score=0;
   for(ApplicationInfo x:getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA)){if(x.packageName.equals(getPackageName()))continue;String n=norm(getPackageManager().getApplicationLabel(x).toString());int s=0;if(n.equals(w))s=100;else if(w.contains(n)||n.contains(w))s=70;for(String t:w.split(" "))if(t.length()>2&&n.contains(t))s+=15;if(s>score){score=s;best=x;}}
   if(best!=null&&score>=25){Intent i=getPackageManager().getLaunchIntentForPackage(best.packageName);if(i!=null){CommandAccessibilityService.pendingSearch=searchText(w);open(i,"سأفتح "+getPackageManager().getApplicationLabel(best));return;}}
   say("لم أجد تطبيقاً باسم "+wanted);
