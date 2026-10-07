@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'paper_quest.dart';
 
 void main() => runApp(const CalculatorApp());
 
@@ -30,10 +31,16 @@ class _CalculatorState extends State<Calculator> {
     if(s.contains('/')){var p=s.split('/');return double.parse(p[0])/double.parse(p[1]);}
     return double.parse(s);
   }
+
   @override
   Widget build(BuildContext c)=>Scaffold(
-    appBar: AppBar(title: const Text('آلة حاسبة')),
+    appBar: AppBar(title: const Text('الحاسبة')),
     body: Column(children:[
+      ElevatedButton.icon(
+        onPressed: ()=>Navigator.push(c, MaterialPageRoute(builder: (_)=>const PaperQuest())),
+        icon: const Icon(Icons.videogame_asset),
+        label: const Text('Paper Quest'),
+      ),
       Expanded(child: Center(child: Text(text,style:const TextStyle(fontSize:40)))),
       for(var r in [['7','8','9','/'],['4','5','6','*'],['1','2','3','-'],['C','0','=','+']]) Row(children:r.map((x)=>Expanded(child:ElevatedButton(onPressed:()=>press(x),child:Text(x,style:const TextStyle(fontSize:25)))).toList()))
     ]));
