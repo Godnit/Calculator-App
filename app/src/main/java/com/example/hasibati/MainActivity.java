@@ -37,7 +37,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   say("لم أفهم اسم التطبيق. اكتب: افتح ثم اسم التطبيق، أو استخدم الوضع المتقدم للبحث والكتابة داخله.");
  }
  String extractExpression(String a){String x=a.replace('×','*').replace('÷','/').replace('−','-');x=x.replace('٠','0').replace('١','1').replace('٢','2').replace('٣','3').replace('٤','4').replace('٥','5').replace('٦','6').replace('٧','7').replace('٨','8').replace('٩','9');java.util.regex.Matcher m=java.util.regex.Pattern.compile("([0-9]+(?:\\.[0-9]+)?\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?(?:\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?)*)").matcher(x);return m.find()?m.group(1).replaceAll("\\s+",""):null;}
- String searchText(String a){int p=a.indexOf("ابحث عن ");if(p<0)p=a.indexOf("ابحث في ");if(p>=0)return a.substring(p+8).replaceAll("ثم شغل.*","").trim();return "";}
+ String searchText(String a){int p=a.indexOf("ابحث عن ");if(p<0)p=a.indexOf("ابحث في ");if(p>=0){String s=a.substring(p+8).replaceAll("ثم شغل.*","").trim();s=s.replaceFirst("^(اغنيه|انشوده|مقطع|فيديو|عن)\\s+","").trim();return s;}return "";}
  void openCalculator(String m){Intent i=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALCULATOR);open(i,m);}
  void openGallery(){Intent i=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);try{startActivity(i);say("سأفتح المعرض");}catch(Exception e){open(new Intent(Intent.ACTION_VIEW).setType("image/*"),"سأفتح الصور");}}
  void openFiles(String q){
