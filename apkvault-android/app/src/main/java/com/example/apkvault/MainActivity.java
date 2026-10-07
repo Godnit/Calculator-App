@@ -4,67 +4,49 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.*;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.*;
 import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.view.*;
 import android.widget.*;
 import java.io.*;
 import java.util.*;
 
 public class MainActivity extends Activity {
-    private static final int PICK_TREE = 10, PICK_APK = 11;
-    private LinearLayout list; private TextView folderLabel; private Uri folder;
+    private static final int PICK_TREE=10;
+    private LinearLayout root,list;
+    private TextView folderLabel;
+    private Uri folder;
+    private ApplicationInfo pendingApp;
     private android.content.SharedPreferences prefs;
-    private final ArrayList<ApplicationInfo> apps = new ArrayList<>();
+    private boolean dark;
+    private int accent;
 
-    @Override public void onCreate(Bundle b) { super.onCreate(b); prefs=getSharedPreferences("settings",MODE_PRIVATE); restoreFolder(); buildUi(); }
-    @Override protected void onResume() { super.onResume(); if(list!=null) refreshApps(); }
-    private int dp(int n) { return (int)(n * getResources().getDisplayMetrics().density + .5f); }
-    private TextView text(String s, int size) { TextView t=new TextView(this); t.setText(s); t.setTextSize(size); t.setTextColor(Color.DKGRAY); t.setPadding(dp(12),dp(8),dp(12),dp(8)); return t; }
-    private void buildUi() {
-        LinearLayout root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL); root.setPadding(dp(12),dp(10),dp(12),0);
-        TextView title=text("حافظ التطبيقات",24); title.setTextColor(Color.rgb(13,71,161)); title.setGravity(Gravity.RIGHT); root.addView(title);
-        TextView info=text("احفظ نسخة APK من التطبيقات المثبتة، ثم افتحها للتثبيت من الملفات.",14); root.addView(info);
-        LinearLayout bar=new LinearLayout(this); bar.setGravity(Gravity.CENTER_VERTICAL); bar.setPadding(0,dp(4),0,dp(4));
-        folderLabel=text(folder==null?"مجلد الحفظ غير محدد":"مجلد الحفظ: تم الاختيار",13); folderLabel.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1)); bar.addView(folderLabel);
-        Button choose=new Button(this); choose.setText("اختيار المجلد"); choose.setTextSize(12); choose.setMinHeight(0); choose.setPadding(dp(8),0,dp(8),0); choose.setOnClickListener(v -> chooseFolder()); bar.addView(choose); root.addView(bar);
-        ScrollView scroll=new ScrollView(this); list=new LinearLayout(this); list.setOrientation(LinearLayout.VERTICAL); scroll.addView(list); root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1)); setContentView(root); refreshApps();
+    @Override public void onCreate(Bundle b){super.onCreate(b); prefs=getSharedPreferences("settings",MODE_PRIVATE); dark=prefs.getBoolean("dark",false); accent=prefs.getInt("accent",0); restoreFolder(); buildUi();}
+    @Override protected void onResume(){super.onResume(); if(list!=null) refreshApps();}
+    private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
+    private int accentColor(){return new int[]{0xff1565c0,0xff00897b,0xff6a1b9a,0xffef6c00}[Math.max(0,Math.min(3,accent))];}
+    private TextView text(String s,int size){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(dark?Color.WHITE:0xff263238);t.setPadding(dp(10),dp(7),dp(10),dp(7));return t;}
+    private GradientDrawable round(int c,int r){GradientDrawable d=new GradientDrawable();d.setColor(c);d.setCornerRadius(dp(r));return d;}
+    private void buildUi(){
+        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setPadding(dp(10),dp(8),dp(10),0);root.setBackgroundColor(dark?0xff121212:0xfff7f9fc);
+        LinearLayout toolbar=new LinearLayout(this);toolbar.setGravity(Gravity.CENTER_VERTICAL);toolbar.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView title=text("حافظ التطبيقات",24);title.setTextColor(accentColor());title.setTypeface(null,1);toolbar.addView(title,new LinearLayout.LayoutParams(0,dp(56),1));
+        Button settings=new Button(this);settings.setText("⚙");settings.setTextSize(23);settings.setTextColor(accentColor());settings.setAllCaps(false);settings.setBackgroundColor(Color.TRANSPARENT);settings.setOnClickListener(v->showSettings());toolbar.addView(settings,new LinearLayout.LayoutParams(dp(58),dp(56)));root.addView(toolbar);
+        LinearLayout bar=new LinearLayout(this);bar.setGravity(Gravity.CENTER_VERTICAL);bar.setPadding(0,dp(3),0,dp(5));
+        folderLabel=text(folder==null?"مجلد الحفظ غير محدد":"مجلد الحفظ: "+folderName(),13);folderLabel.setLayoutParams(new LinearLayout.LayoutParams(0,dp(48),1));bar.addView(folderLabel);
+        Button choose=new Button(this);choose.setText(folder==null?"اختيار المجلد":"تغيير مجلد الحفظ");choose.setTextSize(12);choose.setAllCaps(false);choose.setTextColor(Color.WHITE);choose.setBackground(round(accentColor(),8));choose.setOnClickListener(v->{pendingApp=null;chooseFolder();});bar.addView(choose,new LinearLayout.LayoutParams(dp(150),dp(44)));root.addView(bar);
+        ScrollView scroll=new ScrollView(this);list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);scroll.addView(list);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);refreshApps();
     }
-    private void refreshApps() {
-        if(list==null) return; list.removeAllViews(); apps.clear();
-        PackageManager pm=getPackageManager(); List<ApplicationInfo> all=pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        for(ApplicationInfo a:all) if(pm.getLaunchIntentForPackage(a.packageName)!=null && !a.packageName.equals(getPackageName())) apps.add(a);
-        Collections.sort(apps,(a,b)->pm.getApplicationLabel(a).toString().compareToIgnoreCase(pm.getApplicationLabel(b).toString()));
-        for(ApplicationInfo a:apps) addRow(a);
-    }
-    private void addRow(ApplicationInfo app) {
-        PackageManager pm=getPackageManager(); LinearLayout row=new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(8),dp(5),dp(8),dp(5)); row.setLayoutDirection(View.LAYOUT_DIRECTION_LTR); row.setBackgroundColor(0xfff5f8ff);
-        ImageView icon=new ImageView(this); icon.setImageDrawable(pm.getApplicationIcon(app)); icon.setPadding(dp(4),dp(4),dp(4),dp(4)); row.addView(icon,new LinearLayout.LayoutParams(dp(50),dp(50)));
-        TextView name=text(pm.getApplicationLabel(app).toString(),16); name.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1)); row.addView(name);
-        Button save=new Button(this); save.setText("حفظ APK"); save.setTextColor(Color.WHITE); save.setTextSize(13); save.setAllCaps(false); save.setBackground(round(0xff1565c0,dp(8))); save.setOnClickListener(v->saveApk(app)); row.addView(save,new LinearLayout.LayoutParams(dp(112),dp(48)));
-        list.addView(row); View line=new View(this); line.setBackgroundColor(0xffdddddd); list.addView(line,new LinearLayout.LayoutParams(-1,1));
-    }
-    private GradientDrawable round(int color,int radius){ GradientDrawable d=new GradientDrawable(); d.setColor(color); d.setCornerRadius(radius); return d; }
-    private void chooseFolder() { Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION); startActivityForResult(i,PICK_TREE); }
-    private void pickApk() { Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.setType("application/vnd.android.package-archive"); i.addCategory(Intent.CATEGORY_OPENABLE); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); startActivityForResult(i,PICK_APK); }
-    private void saveApk(ApplicationInfo app) {
-        if(folder==null){ Toast.makeText(this,"اختر مجلد الحفظ أولاً",Toast.LENGTH_SHORT).show(); return; }
-        try {
-            PackageInfo pi=getPackageManager().getPackageInfo(app.packageName,0); String label=getPackageManager().getApplicationLabel(app).toString().replaceAll("[^\\p{L}\\p{N}._-]","_");
-            String fileName=label+"-"+pi.versionName+".apk";
-            Uri parent=DocumentsContract.buildDocumentUriUsingTree(folder,DocumentsContract.getTreeDocumentId(folder));
-            Uri out=DocumentsContract.createDocument(getContentResolver(),parent,"application/vnd.android.package-archive",fileName);
-            if(out==null) throw new IOException("تعذر إنشاء الملف");
-            try(InputStream in=new FileInputStream(app.sourceDir); OutputStream os=getContentResolver().openOutputStream(out)){ byte[] buf=new byte[8192]; int n; while((n=in.read(buf))!=-1) os.write(buf,0,n); }
-            Toast.makeText(this,"تم حفظ: "+fileName,Toast.LENGTH_LONG).show();
-        } catch(Exception e){ Toast.makeText(this,"فشل الحفظ: "+e.getMessage(),Toast.LENGTH_LONG).show(); }
-    }
-    @Override protected void onActivityResult(int req,int res,Intent data){ super.onActivityResult(req,res,data); if(res!=RESULT_OK||data==null)return; Uri u=data.getData();
-        if(req==PICK_TREE){ folder=u; try{getContentResolver().takePersistableUriPermission(u,data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION));}catch(Exception ignored){} prefs.edit().putString("folder_uri",u.toString()).apply(); folderLabel.setText("مجلد الحفظ: تم الاختيار"); }
-        else if(req==PICK_APK){ Intent i=new Intent(Intent.ACTION_VIEW,u); i.setDataAndType(u,"application/vnd.android.package-archive"); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); try{startActivity(i);}catch(Exception e){Toast.makeText(this,"لا يوجد مثبت APK متاح",Toast.LENGTH_LONG).show();} }
-    }
-    private void restoreFolder(){ String saved=prefs.getString("folder_uri",null); if(saved==null)return; try{ folder=Uri.parse(saved); getContentResolver().takePersistableUriPermission(folder,Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION); }catch(Exception e){ folder=null; prefs.edit().remove("folder_uri").apply(); } }
+    private void refreshApps(){if(list==null)return;list.removeAllViews();PackageManager pm=getPackageManager();ArrayList<ApplicationInfo> now=new ArrayList<>();for(ApplicationInfo a:pm.getInstalledApplications(PackageManager.GET_META_DATA))if(pm.getLaunchIntentForPackage(a.packageName)!=null&&!a.packageName.equals(getPackageName()))now.add(a);Collections.sort(now,(a,b)->pm.getApplicationLabel(a).toString().compareToIgnoreCase(pm.getApplicationLabel(b).toString()));for(ApplicationInfo a:now)addRow(a);}
+    private void addRow(ApplicationInfo app){PackageManager pm=getPackageManager();LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(8),dp(5),dp(8),dp(5));row.setBackgroundColor(dark?0xff1e1e1e:0xfff0f5ff);ImageView icon=new ImageView(this);icon.setImageDrawable(pm.getApplicationIcon(app));icon.setPadding(dp(4),dp(4),dp(4),dp(4));row.addView(icon,new LinearLayout.LayoutParams(dp(58),dp(64)));TextView name=text(pm.getApplicationLabel(app).toString(),17);name.setGravity(Gravity.CENTER_VERTICAL|Gravity.LEFT);name.setLayoutParams(new LinearLayout.LayoutParams(0,dp(64),1));row.addView(name);Button save=new Button(this);save.setText("حفظ APK");save.setTextColor(Color.WHITE);save.setTextSize(13);save.setAllCaps(false);save.setBackground(round(accentColor(),9));save.setOnClickListener(v->saveApk(app));row.addView(save,new LinearLayout.LayoutParams(dp(118),dp(52)));list.addView(row);View line=new View(this);line.setBackgroundColor(dark?0xff333333:0xffd8e0ea);list.addView(line,new LinearLayout.LayoutParams(-1,1));}
+    private void chooseFolder(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(i,PICK_TREE);}
+    private void saveApk(ApplicationInfo app){if(folder==null){pendingApp=app;chooseFolder();return;}new CopyTask(app).execute();}
+    private class CopyTask extends AsyncTask<Void,Integer,Exception>{private ApplicationInfo app;private AlertDialog dialog;private ProgressBar progress;private TextView status;CopyTask(ApplicationInfo a){app=a;}protected void onPreExecute(){LinearLayout box=new LinearLayout(MainActivity.this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(24),dp(10),dp(24),dp(10));status=text("جارٍ تجهيز النسخة…",14);box.addView(status);progress=new ProgressBar(MainActivity.this,null,android.R.attr.progressBarStyleHorizontal);progress.setMax(100);box.addView(progress,new LinearLayout.LayoutParams(-1,dp(20)));dialog=new AlertDialog.Builder(MainActivity.this).setTitle("حفظ التطبيق").setView(box).setCancelable(false).create();dialog.show();}protected Exception doInBackground(Void...v){try{PackageInfo pi=getPackageManager().getPackageInfo(app.packageName,0);String label=getPackageManager().getApplicationLabel(app).toString().replaceAll("[^\\p{L}\\p{N}._-]","_");String file=label+"-"+pi.versionName+".apk";Uri parent=DocumentsContract.buildDocumentUriUsingTree(folder,DocumentsContract.getTreeDocumentId(folder));Uri out=DocumentsContract.createDocument(getContentResolver(),parent,"application/vnd.android.package-archive",file);if(out==null)throw new IOException("تعذر إنشاء الملف");long total=new File(app.sourceDir).length(),copied=0;try(InputStream in=new FileInputStream(app.sourceDir);OutputStream os=getContentResolver().openOutputStream(out)){byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){os.write(buf,0,n);copied+=n;publishProgress((int)(copied*100/Math.max(1,total)));}}return null;}catch(Exception e){return e;}}protected void onProgressUpdate(Integer...p){progress.setProgress(p[0]);status.setText("تم نسخ "+p[0]+"٪");}protected void onPostExecute(Exception e){if(dialog!=null)dialog.dismiss();Toast.makeText(MainActivity.this,e==null?"تم حفظ التطبيق بنجاح":"فشل الحفظ: "+e.getMessage(),Toast.LENGTH_LONG).show();}}
+    @Override protected void onActivityResult(int req,int res,Intent data){super.onActivityResult(req,res,data);if(req!=PICK_TREE||res!=RESULT_OK||data==null)return;Uri u=data.getData();folder=u;try{getContentResolver().takePersistableUriPermission(u,data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION));}catch(Exception ignored){}prefs.edit().putString("folder_uri",u.toString()).apply();if(folderLabel!=null)folderLabel.setText("مجلد الحفظ: "+folderName());if(pendingApp!=null){ApplicationInfo a=pendingApp;pendingApp=null;new CopyTask(a).execute();}}
+    private void restoreFolder(){String saved=prefs.getString("folder_uri",null);if(saved==null)return;try{folder=Uri.parse(saved);getContentResolver().takePersistableUriPermission(folder,Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);}catch(Exception e){folder=null;prefs.edit().remove("folder_uri").apply();}}
+    private String folderName(){if(folder==null)return "غير محدد";try{Uri d=DocumentsContract.buildDocumentUriUsingTree(folder,DocumentsContract.getTreeDocumentId(folder));Cursor c=getContentResolver().query(d,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null);if(c!=null&&c.moveToFirst()){String n=c.getString(0);c.close();return n;}if(c!=null)c.close();}catch(Exception ignored){}return "تم الاختيار";}
+    private void showSettings(){LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(20),dp(6),dp(20),0);TextView path=text("مجلد الحفظ الحالي: "+folderName(),15);box.addView(path);CheckBox night=new CheckBox(this);night.setText("الوضع الليلي");night.setTextColor(dark?Color.WHITE:0xff263238);night.setChecked(dark);box.addView(night);box.addView(text("لون التطبيق",15));LinearLayout colors=new LinearLayout(this);int[] cs={0xff1565c0,0xff00897b,0xff6a1b9a,0xffef6c00};for(int i=0;i<cs.length;i++){final int k=i;Button b=new Button(this);b.setText(" ");b.setBackground(round(cs[i],8));b.setOnClickListener(v->{accent=k;prefs.edit().putInt("accent",k).apply();});colors.addView(b,new LinearLayout.LayoutParams(0,dp(42),1));}box.addView(colors);new AlertDialog.Builder(this).setTitle("الإعدادات").setView(box).setPositiveButton("حفظ",(d,w)->{dark=night.isChecked();prefs.edit().putBoolean("dark",dark).apply();buildUi();}).setNegativeButton("إلغاء",null).show();}
 }
