@@ -1,0 +1,13 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.example.apkvault'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.example.apkvault'
+        minSdk 27
+        targetSdk 27
+        versionCode 1
+        versionName '1.0'
+    }
+}
