@@ -12,14 +12,14 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   TextView title=label("نفّذ",30);title.setTypeface(null,1);root.addView(title,new LinearLayout.LayoutParams(-1,55));
   TextView sub=label("مساعد ذكي للتطبيقات والحساب",16);sub.setTextColor(Color.rgb(180,195,220));root.addView(sub,new LinearLayout.LayoutParams(-1,42));
   LinearLayout modes=new LinearLayout(this);modes.setPadding(0,4,0,4);
-  Button basic=mode("أساسي محلي"), adv=mode("متقدم محلي");modes.addView(basic,new LinearLayout.LayoutParams(0,58,1));modes.addView(adv,new LinearLayout.LayoutParams(0,58,1));root.addView(modes);
+  TextView basic=mode("أساسي محلي"), adv=mode("متقدم محلي");modes.addView(basic,new LinearLayout.LayoutParams(0,58,1));modes.addView(adv,new LinearLayout.LayoutParams(0,58,1));root.addView(modes);
   command=new EditText(this);command.setHint("مثال: افتح الحاسبة واحسب 500 - 42");command.setTextColor(Color.WHITE);command.setHintTextColor(Color.rgb(145,155,175));command.setTextSize(17);command.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);command.setTextDirection(View.TEXT_DIRECTION_RTL);command.setSingleLine(true);command.setPadding(18,0,18,0);command.setImeOptions(EditorInfo.IME_ACTION_DONE);command.setBackground(shape(Color.rgb(23,35,57)));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,68);cp.topMargin=14;root.addView(command,cp);
-  Button run=new Button(this);run.setText("تنفيذ الأمر");run.setTextSize(18);run.setTextColor(Color.WHITE);run.setMinHeight(0);run.setAllCaps(false);run.setBackground(shape(blue));LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-1,62);rp.topMargin=14;root.addView(run,rp);
+  TextView run=label("تنفيذ الأمر",18);run.setGravity(Gravity.CENTER);run.setTextColor(Color.WHITE);run.setBackground(shape(blue));run.setPadding(0,0,0,0);LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-1,62);rp.topMargin=14;root.addView(run,rp);
   result=label("جاهز. اكتب أمراً مثل: افتح المعرض أو افتح MX Player",16);result.setTextColor(Color.rgb(215,225,242));result.setPadding(0,22,0,0);root.addView(result,new LinearLayout.LayoutParams(-1,0,1));
   TextView help=label("المتقدم ينفذ الكتابة والبحث داخل التطبيقات بعد تفعيل خدمة إمكانية الوصول من إعدادات الهاتف.",13);help.setTextColor(Color.rgb(145,155,175));help.setGravity(Gravity.RIGHT|Gravity.BOTTOM);root.addView(help,new LinearLayout.LayoutParams(-1,72));
   basic.setOnClickListener(v->{advanced=false;say("الوضع الأساسي: فتح التطبيقات والحساب المحلي");});adv.setOnClickListener(v->{advanced=true;say("الوضع المتقدم: تنفيذ خطوات داخل التطبيقات");});run.setOnClickListener(v->execute());command.setOnEditorActionListener((v,a,e)->{execute();return true;});setContentView(root);
  }
- Button mode(String s){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(Color.WHITE);b.setAllCaps(false);b.setMinHeight(0);b.setGravity(Gravity.CENTER);b.setTextDirection(View.TEXT_DIRECTION_RTL);b.setBackground(shape(Color.rgb(35,57,94)));return b;}
+ TextView mode(String s){TextView b=label(s,15);b.setGravity(Gravity.CENTER);b.setTextColor(Color.WHITE);b.setPadding(6,0,6,0);b.setBackground(shape(Color.rgb(35,57,94)));return b;}
  String norm(String s){s=Normalizer.normalize(s,Normalizer.Form.NFD).replaceAll("\\p{M}","").toLowerCase(Locale.ROOT);return s.replace('أ','ا').replace('إ','ا').replace('آ','ا').replace('ة','ه').replace('ى','ي').replaceAll("[^\\p{L}\\p{Nd}]+"," ").trim();}
  void say(String s){result.setText(s);if(tts!=null)tts.speak(s,TextToSpeech.QUEUE_FLUSH,null,"answer");}
  void execute(){
