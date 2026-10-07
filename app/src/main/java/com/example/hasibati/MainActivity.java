@@ -26,7 +26,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   String q=command.getText().toString().trim();if(q.isEmpty()){say("اكتب أمراً أولاً");return;}String a=norm(q);
   String expr=extractExpression(q);
   if(expr!=null&&(a.contains("حاسبه")||a.contains("احسب")||a.contains("عمليه"))){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
-  if(a.contains("معرض")||a.contains("صور")||a.contains("استديو")){openGallery();return;}
+  if((a.contains("معرض")||a.contains("استديو")||(a.contains("صور")&&!a.contains("كروم")&&!a.contains("chrome")&&!a.contains("يوتيوب")&&!a.contains("youtube")))&&!a.contains("ملفات")){openGallery();return;}
   if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles(a);return;}
   if(a.contains("mx player")||a.contains("ام اكس")||a.contains("اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")||a.contains("media player")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
   if(a.contains("كروم")||a.contains("كرووم")||a.contains("جوجل كروم")||a.contains("chrome")||a.contains("google chrome")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.android.chrome","Chrome");return;}
