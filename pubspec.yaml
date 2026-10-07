@@ -1,5 +1,5 @@
 name: calculator_app
-description: Simple calculator app
+description: Simple calculator app with Paper Quest
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  camera: ^0.10.5+9
+  image_picker: ^1.0.7
 
 flutter:
   uses-material-design: true
