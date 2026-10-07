@@ -1,6 +1,6 @@
 package com.example.hasibati;
 
-import android.app.*;import android.os.*;import android.content.*;import android.content.pm.*;import android.graphics.Color;import android.graphics.drawable.GradientDrawable;import android.provider.Settings;import android.speech.tts.TextToSpeech;import android.view.*;import android.view.inputmethod.EditorInfo;import android.widget.*;import java.text.Normalizer;import java.util.*;
+import android.app.*;import android.os.*;import android.content.*;import android.net.Uri;import android.content.pm.*;import android.graphics.Color;import android.graphics.drawable.GradientDrawable;import android.provider.Settings;import android.speech.tts.TextToSpeech;import android.view.*;import android.view.inputmethod.EditorInfo;import android.widget.*;import java.text.Normalizer;import java.util.*;
 
 public class MainActivity extends Activity implements TextToSpeech.OnInitListener{
  EditText command; TextView result; TextToSpeech tts; boolean advanced=false; final int blue=Color.rgb(75,115,235);
@@ -29,8 +29,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   if((a.contains("معرض")||a.contains("استديو")||(a.contains("صور")&&!a.contains("كروم")&&!a.contains("chrome")&&!a.contains("يوتيوب")&&!a.contains("youtube")))&&!a.contains("ملفات")){openGallery();return;}
   if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles(a);return;}
   if(a.contains("mx player")||a.contains("ام اكس")||a.contains("اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")||a.contains("media player")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
-  if(a.contains("كروم")||a.contains("كرووم")||a.contains("جوجل كروم")||a.contains("chrome")||a.contains("google chrome")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.android.chrome","Chrome");return;}
-  if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
+  if(a.contains("كروم")||a.contains("كرووم")||a.contains("جوجل كروم")||a.contains("chrome")||a.contains("google chrome")){openSearchUrl("com.android.chrome","Chrome",searchText(a),"https://www.google.com/search?q=");return;}
+  if(a.contains("يوتيوب")||a.contains("youtube")){openSearchUrl("com.google.android.youtube","YouTube",searchText(a),"https://www.youtube.com/results?search_query=");return;}
   if(a.contains("شات جي بي تي")||a.contains("تسات جي بي تي")||a.contains("chatgpt")||a.contains("chat gpt")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.openai.chatgpt","ChatGPT");return;}
   if(a.contains("واتساب")||a.contains("whatsapp")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.whatsapp","WhatsApp");return;}
   if(a.contains("تلجرام")||a.contains("تليجرام")||a.contains("telegram")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("org.telegram.messenger","Telegram");return;}
@@ -47,10 +47,13 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
  void openFiles(String q){
   Intent files=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_FILES);
   List<ResolveInfo> apps=getPackageManager().queryIntentActivities(files,PackageManager.MATCH_DEFAULT_ONLY);
-  for(ResolveInfo ri:apps){String n=norm(ri.loadLabel(getPackageManager()).toString());if(n.contains("ملف")||n.contains("مدير")||n.contains("file")||n.contains("files")){files.setPackage(ri.activityInfo.packageName);open(files,"سأفتح إدارة الملفات");return;}}
+  for(ResolveInfo ri:apps){String n=norm(ri.loadLabel(getPackageManager()).toString());if(n.equals("اداره الملفات")||n.equals("مدير الملفات")||n.equals("ملفات")||n.contains("file manager")){files.setPackage(ri.activityInfo.packageName);open(files,"سأفتح إدارة الملفات");return;}}
   String[] known={"com.google.android.documentsui","com.android.documentsui","com.mi.android.globalFileexplorer","com.coloros.filemanager","com.sec.android.app.myfiles"};
   for(String p:known){Intent i=getPackageManager().getLaunchIntentForPackage(p);if(i!=null){open(i,"سأفتح إدارة الملفات");return;}}
   try{startActivity(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE));say("سأفتح مدير الملفات");}catch(Exception e){say("لم أجد تطبيق إدارة الملفات");}
+}
+void openSearchUrl(String pkg,String name,String query,String base){
+  try{Intent i;if(query==null||query.isEmpty()){i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null)throw new Exception();}else{i=new Intent(Intent.ACTION_VIEW,Uri.parse(base+Uri.encode(query)));if(getPackageManager().getLaunchIntentForPackage(pkg)!=null)i.setPackage(pkg);}startActivity(i);say("سأفتح "+name+(query==null||query.isEmpty()?"":" وأبحث عن "+query));}catch(Exception e){try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(base+Uri.encode(query==null?"":query))));say("سأفتح البحث في "+name);}catch(Exception z){say("لم أجد تطبيق "+name);}}
 }
 void openNamedPackage(String pkg,String name){Intent i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null){launchBestApp(norm(name));return;}open(i,"سأفتح "+name+(CommandAccessibilityService.pendingSearch.isEmpty()?"":" وأبحث عن "+CommandAccessibilityService.pendingSearch));}
  void launchBestApp(String q){
