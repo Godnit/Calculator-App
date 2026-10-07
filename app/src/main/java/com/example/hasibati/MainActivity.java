@@ -19,27 +19,35 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   TextView help=label("المتقدم ينفذ الكتابة والبحث داخل التطبيقات بعد تفعيل خدمة إمكانية الوصول من إعدادات الهاتف.",13);help.setTextColor(Color.rgb(145,155,175));help.setGravity(Gravity.RIGHT|Gravity.BOTTOM);root.addView(help,new LinearLayout.LayoutParams(-1,72));
   basic.setOnClickListener(v->{advanced=false;say("الوضع الأساسي: فتح التطبيقات والحساب المحلي");});adv.setOnClickListener(v->{advanced=true;say("الوضع المتقدم: تنفيذ خطوات داخل التطبيقات");});run.setOnClickListener(v->execute());command.setOnEditorActionListener((v,a,e)->{execute();return true;});setContentView(root);
  }
- Button mode(String s){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(Color.WHITE);b.setAllCaps(false);b.setMinHeight(0);b.setBackground(shape(Color.rgb(35,57,94)));return b;}
+ Button mode(String s){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(Color.WHITE);b.setAllCaps(false);b.setMinHeight(0);b.setGravity(Gravity.CENTER);b.setTextDirection(View.TEXT_DIRECTION_RTL);b.setBackground(shape(Color.rgb(35,57,94)));return b;}
  String norm(String s){s=Normalizer.normalize(s,Normalizer.Form.NFD).replaceAll("\\p{M}","").toLowerCase(Locale.ROOT);return s.replace('أ','ا').replace('إ','ا').replace('آ','ا').replace('ة','ه').replace('ى','ي').replaceAll("[^\\p{L}\\p{Nd}]+"," ").trim();}
  void say(String s){result.setText(s);if(tts!=null)tts.speak(s,TextToSpeech.QUEUE_FLUSH,null,"answer");}
  void execute(){
   String q=command.getText().toString().trim();if(q.isEmpty()){say("اكتب أمراً أولاً");return;}String a=norm(q);
-  String expr=extractExpression(a);
-  if(advanced&&expr!=null&&(a.contains("حاسبه")||a.contains("احسب")||a.contains("عمليه"))){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
+  String expr=extractExpression(q);
+  if(expr!=null&&(a.contains("حاسبه")||a.contains("احسب")||a.contains("عمليه"))){CommandAccessibilityService.pendingExpression=expr;openCalculator("سأفتح الحاسبة وأكتب "+expr);return;}
   if(a.contains("معرض")||a.contains("صور")||a.contains("استديو")){openGallery();return;}
-  if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles();return;}
+  if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles(a);return;}
   if(a.contains("mx player")||a.contains("ام اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
-  if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
+  if(a.contains("كروم")||a.contains("chrome")){openNamedPackage("com.android.chrome","Chrome");return;}\n  if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
   if(a.contains("اعدادات")||a.contains("ضبط")){open(new Intent(Settings.ACTION_SETTINGS),"سأفتح الإعدادات");return;}
   if(expr!=null&&!a.contains("افتح")){try{double n=eval(expr);say("الناتج هو "+(n==(long)n?String.valueOf((long)n):String.valueOf(n)));return;}catch(Exception e){}}
   if(a.startsWith("افتح ")||a.startsWith("شغل ")||a.startsWith("ادخل ")||a.startsWith("انتقل")){launchBestApp(a);return;}
   say("لم أفهم اسم التطبيق. اكتب: افتح ثم اسم التطبيق، أو استخدم الوضع المتقدم للبحث والكتابة داخله.");
  }
- String extractExpression(String a){String x=a.replace('×','*').replace('÷','/').replaceAll("[٠-٩]","");java.util.regex.Matcher m=java.util.regex.Pattern.compile("([0-9]+(?:\\.[0-9]+)?\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?(?:\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?)*)").matcher(x);return m.find()?m.group(1).replaceAll("\\s+",""):null;}
+ String extractExpression(String a){String x=a.replace('×','*').replace('÷','/').replace('−','-');x=x.replace('٠','0').replace('١','1').replace('٢','2').replace('٣','3').replace('٤','4').replace('٥','5').replace('٦','6').replace('٧','7').replace('٨','8').replace('٩','9');java.util.regex.Matcher m=java.util.regex.Pattern.compile("([0-9]+(?:\\.[0-9]+)?\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?(?:\\s*[+\\-*/]\\s*[0-9]+(?:\\.[0-9]+)?)*)").matcher(x);return m.find()?m.group(1).replaceAll("\\s+",""):null;}
  String searchText(String a){int p=a.indexOf("ابحث عن ");if(p<0)p=a.indexOf("ابحث في ");if(p>=0)return a.substring(p+8).replaceAll("ثم شغل.*","").trim();return "";}
  void openCalculator(String m){Intent i=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALCULATOR);open(i,m);}
  void openGallery(){Intent i=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);try{startActivity(i);say("سأفتح المعرض");}catch(Exception e){open(new Intent(Intent.ACTION_VIEW).setType("image/*"),"سأفتح الصور");}}
- void openFiles(){try{startActivity(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE));say("سأفتح إدارة الملفات");}catch(Exception e){say("لم أجد تطبيق إدارة الملفات");}}
+ void openFiles(String q){
+  ApplicationInfo best=null;int score=0;
+  for(ApplicationInfo x:getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA)){
+   if(x.packageName.equals(getPackageName()))continue;String n=norm(getPackageManager().getApplicationLabel(x).toString()+" "+x.packageName);int s=0;
+   if(n.contains("file")||n.contains("files")||n.contains("manager")||n.contains("ملف")||n.contains("مدير"))s=80;
+   if(s>score){score=s;best=x;}
+  }
+  if(best!=null){Intent i=getPackageManager().getLaunchIntentForPackage(best.packageName);if(i!=null){open(i,"سأفتح إدارة الملفات");return;}}
+  try{startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_FILES));say("سأفتح إدارة الملفات");}catch(Exception e){try{startActivity(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE));say("سأفتح مدير الملفات");}catch(Exception z){say("لم أجد تطبيق إدارة الملفات");}}}
  void openNamedPackage(String pkg,String name){Intent i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null){launchBestApp(norm(name));return;}open(i,"سأفتح "+name+(CommandAccessibilityService.pendingSearch.isEmpty()?"":" وأبحث عن "+CommandAccessibilityService.pendingSearch));}
  void launchBestApp(String q){
   String wanted=q.replaceFirst("^(افتح|شغل|ادخل|انتقل)\\s*","").trim();String w=norm(wanted);ApplicationInfo best=null;int score=0;
