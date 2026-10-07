@@ -29,7 +29,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
   if(a.contains("معرض")||a.contains("صور")||a.contains("استديو")){openGallery();return;}
   if(a.contains("ملفات")||a.contains("مدير الملفات")||a.contains("اداره الملفات")||a.contains("file manager")){CommandAccessibilityService.pendingSearch=searchText(a);openFiles(a);return;}
   if(a.contains("mx player")||a.contains("ام اكس")||a.contains("مشغل الوسائط")||a.contains("مشغل")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.mxtech.videoplayer.ad","MX Player");return;}
-  if(a.contains("كروم")||a.contains("chrome")){openNamedPackage("com.android.chrome","Chrome");return;}\n  if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
+  if(a.contains("كروم")||a.contains("chrome")){openNamedPackage("com.android.chrome","Chrome");return;}
+  if(a.contains("يوتيوب")||a.contains("youtube")){CommandAccessibilityService.pendingSearch=searchText(a);openNamedPackage("com.google.android.youtube","YouTube");return;}
   if(a.contains("اعدادات")||a.contains("ضبط")){open(new Intent(Settings.ACTION_SETTINGS),"سأفتح الإعدادات");return;}
   if(expr!=null&&!a.contains("افتح")){try{double n=eval(expr);say("الناتج هو "+(n==(long)n?String.valueOf((long)n):String.valueOf(n)));return;}catch(Exception e){}}
   if(a.startsWith("افتح ")||a.startsWith("شغل ")||a.startsWith("ادخل ")||a.startsWith("انتقل")){launchBestApp(a);return;}
