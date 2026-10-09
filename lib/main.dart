@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'paper_quest.dart';
+import 'notes.dart';
 
 void main() => runApp(const CalculatorApp());
 
@@ -34,13 +35,13 @@ class _CalculatorState extends State<Calculator> {
 
   @override
   Widget build(BuildContext c)=>Scaffold(
-    appBar: AppBar(title: const Text('الحاسبة')),
+    appBar: AppBar(title: const Text('الحاسبة + المذكرة')),
     body: Column(children:[
-      ElevatedButton.icon(
-        onPressed: ()=>Navigator.push(c, MaterialPageRoute(builder: (_)=>const PaperQuest())),
-        icon: const Icon(Icons.videogame_asset),
-        label: const Text('Paper Quest'),
-      ),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children:[
+        ElevatedButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const NotesPage())),child:const Text('فتح المذكرة')),
+        const SizedBox(width:10),
+        ElevatedButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const PaperQuest())),child:const Text('Paper Quest')),
+      ]),
       Expanded(child: Center(child: Text(text,style:const TextStyle(fontSize:40)))),
       for(var r in [['7','8','9','/'],['4','5','6','*'],['1','2','3','-'],['C','0','=','+']]) Row(children:r.map((x)=>Expanded(child:ElevatedButton(onPressed:()=>press(x),child:Text(x,style:const TextStyle(fontSize:25)))).toList()))
     ]));
