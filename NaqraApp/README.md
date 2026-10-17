@@ -10,3 +10,5 @@ A small offline Arabic counter app for Android.
 
 ## Build
 The GitHub Actions workflow builds a debug APK from this directory and uploads it as an artifact. It also publishes a test prerelease when the build succeeds.
+
+The Android build workflow uses the Android SDK and Gradle on GitHub Actions.
